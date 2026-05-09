@@ -1,0 +1,11 @@
+﻿################################################################################
+# この .gitignore ファイルは Microsoft(R) Visual Studio によって自動的に作成されました。
+################################################################################
+
+/.vs
+/learning_directx/x64/Debug
+/x64/Debug
+/Past_Memories.wav
+/aaaa.wav
+/eyrereyyre.PNG
+/2D_Shoot.bb6f5f4e/x64/Debug
