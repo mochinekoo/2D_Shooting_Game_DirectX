@@ -13,10 +13,13 @@
 #include "SoundManager.h"
 #include "Image.h"
 #include "SceneManager.h"
+#include "ImGUI/imgui_impl_win32.h"
+#include "ImGUI/imgui_impl_dx11.h"
 
 using namespace MyDirectX;
 #pragma comment(lib , "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d2d1.lib") 
 #pragma comment(lib, "dwrite.lib")
 #pragma comment(lib, "d3d11.lib")
@@ -28,8 +31,10 @@ namespace {
 }
 
 int initWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd);
+HRESULT initImGUI(HWND hwnd);
 void updateMainLoop();
 void drawMainLoop();
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
     if (initWindow(hInstance, hPrevInstance, lpCmdLine, nShowCmd) == -1) {
@@ -39,6 +44,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) {
+        return true;
+    }
+
     switch (msg) {
     case WM_DESTROY: {
         PostQuitMessage(0); //メッセージループ終了（=アプリを終了）
@@ -94,6 +103,7 @@ int initWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, in
     Input::initKey(hInstance, hwnd);
     SoundManager::initialize();
     SceneManager::InitManager();
+    initImGUI(hwnd);
 
     //メッセージ
     MSG msg = {};
@@ -109,6 +119,21 @@ int initWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, in
     }
 
     return 0;
+}
+
+HRESULT initImGUI(HWND hwnd) {
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    ImGui::StyleColorsLight();
+    ImGui_ImplWin32_Init(hwnd);
+    ID3D11Device* device = (ID3D11Device*)MyDirectX::device_;
+    ID3D11DeviceContext* deviceContext = (ID3D11DeviceContext*)context_;
+    ImGui_ImplDX11_Init(device, deviceContext);
+
+    return S_OK;
 }
 
 void updateMainLoop() {
@@ -131,6 +156,10 @@ void updateMainLoop() {
 }
 
 void drawMainLoop() {
+    ImGui_ImplWin32_NewFrame();
+    ImGui_ImplDX11_NewFrame();
+    ImGui::NewFrame();
+
     float color[4] = { 0, 0, 0, 1.0f };
 
     MyDirectX::context_->OMSetRenderTargets(1, &MyDirectX::renderTargetView, nullptr);
@@ -139,6 +168,14 @@ void drawMainLoop() {
     auto currentScene = SceneManager::GetCurrentScene();
     if (currentScene != nullptr) {
         currentScene->Draw();
+    }
+
+    ImGui::EndFrame();
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
     }
 
     MyDirectX::swapChain->Present(1, 0);

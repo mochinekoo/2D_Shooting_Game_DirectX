@@ -2,6 +2,7 @@
 #include <wincodec.h>
 #include <vector>
 #include "MyDirectX.h"
+#include "ImGUI/imgui.h"
 
 using namespace MyDirectX;
 using namespace DirectX;
@@ -9,18 +10,28 @@ using namespace DirectX;
 Image::Image(std::string path, float leftX, float leftY, float width, float height)
 	: BaseObject("Image", false) {
 	path_ = path;
+	angle_ = 0;
 	location_.x = leftX;
 	location_.y = leftY;
 	location_.z = 0;
 
 	//画面上の座標と、画像の座標は反対
-	vertices[0] = { leftX, leftY, 0, 1,1,1,1, 0, 1 }; // 画面上の座標：左上　→ 画像の座標：左下
-	vertices[1] = { leftX, leftY + 1.0f, 0, 1,1,1,1, 0, 0 }; //  左下 → 左上
-	vertices[2] = { leftX + 1.0f, leftY, 0, 1,1,1,1, 1, 1 }; // 右上 → 右下
+	// vertices[0] = { leftX, leftY, 0, 1,1,1,1, 0, 1 }; // 画面上の座標：左上　→ 画像の座標：左下
+	// vertices[1] = { leftX, leftY + 1.0f, 0, 1,1,1,1, 0, 0 }; //  左下 → 左上
+	// vertices[2] = { leftX + 1.0f, leftY, 0, 1,1,1,1, 1, 1 }; // 右上 → 右下
 
-	vertices[3] = { leftX + 1.0f, leftY, 0, 1,1,1,1, 1, 1 }; // 右上 → 右下
-	vertices[4] = { leftX, leftY + 1.0f, 0, 1,1,1,1, 0, 0 }; // 左下 → 左上
-	vertices[5] = { leftX + 1.0f, leftY + 1.0f, 0, 1,1,1,1, 1, 0 }; // 右下 → 右上
+	// vertices[3] = { leftX + 1.0f, leftY, 0, 1,1,1,1, 1, 1 }; // 右上 → 右下
+	// vertices[4] = { leftX, leftY + 1.0f, 0, 1,1,1,1, 0, 0 }; // 左下 → 左上
+	// vertices[5] = { leftX + 1.0f, leftY + 1.0f, 0, 1,1,1,1, 1, 0 }; // 右下 → 右上
+
+	vertices[0] = { 0, 0, 0, 1,1,1,1, 0, 1 };
+	vertices[1] = { 0, height, 0, 1,1,1,1, 0, 0 };
+	vertices[2] = { width, 0, 0, 1,1,1,1, 1, 1 };
+
+	vertices[3] = { width, 0, 0, 1,1,1,1, 1, 1 };
+	vertices[4] = { 0, height, 0, 1,1,1,1, 0, 0 };
+	vertices[5] = { width, height, 0, 1,1,1,1, 1, 0 };
+
 }
 
 Image::~Image()
@@ -123,6 +134,10 @@ void Image::Initialize() {
 
 	result = MyDirectX::device_->CreateBuffer(&bufferDesc, &vertexData, &vertexBuffer);
 	assert(SUCCEEDED(result));
+
+	rastDesc.FillMode = D3D11_FILL_SOLID;
+	rastDesc.CullMode = D3D11_CULL_NONE;
+	rastDesc.FrontCounterClockwise = FALSE;
 	MyDirectX::device_->CreateRasterizerState(&rastDesc, &rastState);
 
 	D3D11_BUFFER_DESC constantBufferDesc = {};
@@ -138,7 +153,7 @@ void Image::Initialize() {
 }
 
 void Image::Update() {
-	XMMATRIX worldMatrix = XMMatrixRotationX(angle_) * XMMatrixTranslation(location_.x, location_.y, 0.0f);
+	XMMATRIX worldMatrix = XMMatrixRotationZ(angle_) * XMMatrixTranslation(location_.x, location_.y, 0.0f);
 	angle_ += XMConvertToRadians(1.0f);
 
 	const float left = -1.0, right = 1.0;
@@ -167,18 +182,19 @@ void Image::Draw() {
 	context_->PSSetShaderResources(0, 1, &textureView);
 	context_->PSSetSamplers(0, 1, &samplerState);
 	context_->VSSetConstantBuffers(0, 1, &buffer);
-
-	rastDesc.FillMode = D3D11_FILL_SOLID;
-	rastDesc.CullMode = D3D11_CULL_NONE;
-	rastDesc.FrontCounterClockwise = FALSE;
-
-	ID3D11RasterizerState* rasterizerState = nullptr;
-	device_->CreateRasterizerState(&rastDesc, &rasterizerState);
-	MyDirectX::context_->RSSetState(rastState);
+	context_->RSSetState(rastState);
 
 	context_->Draw(6, 0);
 
 	MyDirectX::context_->RSSetState(nullptr);
+
+#ifdef _DEBUG
+	ImGui::Begin("Image");
+	ImGui::SliderFloat("x ", &location_.x, 0, 1280.0f);
+	ImGui::SliderFloat("y ", &location_.y, 0, 720.0f);
+	ImGui::SliderFloat("angle ", &angle_, 0, 360.0f);
+	ImGui::End();
+#endif
 }
 
 void Image::Release()
