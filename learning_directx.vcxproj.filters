@@ -42,6 +42,12 @@
     <ClCompile Include="RootScene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="RunningScene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Circle.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseObject.h">
@@ -76,6 +82,12 @@
     </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Root</Filter>
+    </ClInclude>
+    <ClInclude Include="RunningScene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Circle.h">
+      <Filter>Object</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

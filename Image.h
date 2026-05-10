@@ -11,9 +11,12 @@ private:
 	Vertex vertices[6] = {};
 	std::string path_;
     UINT width_ = -1, height_ = -1;
+	DirectX::XMFLOAT3 location_;
+	float angle_;
 public:
 	D3D11_TEXTURE2D_DESC textureDesc = {};
 	ID3D11Texture2D* texture = nullptr;
+	ID3D11Buffer* buffer = nullptr;
 	ID3D11ShaderResourceView* textureView = nullptr;
 	ID3D11SamplerState* samplerState = nullptr;
 	ID3D11RasterizerState* rastState = nullptr;

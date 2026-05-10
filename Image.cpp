@@ -1,12 +1,17 @@
 #include "Image.h"
 #include <wincodec.h>
 #include <vector>
+#include "MyDirectX.h"
 
 using namespace MyDirectX;
+using namespace DirectX;
 
 Image::Image(std::string path, float leftX, float leftY, float width, float height)
 	: BaseObject("Image", false) {
 	path_ = path;
+	location_.x = leftX;
+	location_.y = leftY;
+	location_.z = 0;
 
 	//画面上の座標と、画像の座標は反対
 	vertices[0] = { leftX, leftY, 0, 1,1,1,1, 0, 1 }; // 画面上の座標：左上　→ 画像の座標：左下
@@ -118,12 +123,34 @@ void Image::Initialize() {
 
 	result = MyDirectX::device_->CreateBuffer(&bufferDesc, &vertexData, &vertexBuffer);
 	assert(SUCCEEDED(result));
-
 	MyDirectX::device_->CreateRasterizerState(&rastDesc, &rastState);
+
+	D3D11_BUFFER_DESC constantBufferDesc = {};
+	constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	constantBufferDesc.ByteWidth = sizeof(ConstantBuffer);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = 0;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+	result = device_->CreateBuffer(&constantBufferDesc, nullptr, &buffer);
+
+	
 }
 
-void Image::Update()
-{
+void Image::Update() {
+	XMMATRIX worldMatrix = XMMatrixRotationX(angle_) * XMMatrixTranslation(location_.x, location_.y, 0.0f);
+	angle_ += XMConvertToRadians(1.0f);
+
+	const float left = -1.0, right = 1.0;
+	const float top = -1.0, bottom = 1.0;
+	const float nearZ = 0.0, farZ = 1.0;
+	XMMATRIX projectionMatrix = XMMatrixOrthographicOffCenterLH(left, right, top, bottom, nearZ, farZ);
+	XMMATRIX wvpMatrix = worldMatrix * projectionMatrix;
+
+	ConstantBuffer constantBuffer_ = {};
+	constantBuffer_.wvpMatrix = wvpMatrix;
+
+	MyDirectX::context_->UpdateSubresource(buffer ,0, nullptr, &constantBuffer_, 0, 0);
 }
 
 void Image::Draw() {
@@ -139,11 +166,14 @@ void Image::Draw() {
 	context_->PSSetShader(imagePixelShader, nullptr, 0);
 	context_->PSSetShaderResources(0, 1, &textureView);
 	context_->PSSetSamplers(0, 1, &samplerState);
+	context_->VSSetConstantBuffers(0, 1, &buffer);
 
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 	rastDesc.CullMode = D3D11_CULL_NONE;
 	rastDesc.FrontCounterClockwise = FALSE;
 
+	ID3D11RasterizerState* rasterizerState = nullptr;
+	device_->CreateRasterizerState(&rastDesc, &rasterizerState);
 	MyDirectX::context_->RSSetState(rastState);
 
 	context_->Draw(6, 0);

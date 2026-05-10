@@ -128,10 +128,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Circle.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RootScene.cpp" />
+    <ClCompile Include="RunningScene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Square.cpp" />
@@ -140,11 +142,13 @@
   <ItemGroup>
     <ClInclude Include="BaseObject.h" />
     <ClInclude Include="BaseScene.h" />
+    <ClInclude Include="Circle.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="MyDirectX.h" />
     <ClInclude Include="RootScene.h" />
+    <ClInclude Include="RunningScene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SoundManager.h" />
     <ClInclude Include="Square.h" />

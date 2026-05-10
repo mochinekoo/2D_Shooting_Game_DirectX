@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <assert.h>
 #include "framework.h"
+#include <DirectXMath.h>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -14,6 +15,10 @@ struct Vertex {
     float x, y, z;
     float r, g, b, a;
 	float u, v;
+};
+
+struct ConstantBuffer {
+	DirectX::XMMATRIX wvpMatrix;
 };
 
 namespace MyDirectX {

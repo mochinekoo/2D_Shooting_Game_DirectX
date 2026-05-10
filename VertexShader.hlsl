@@ -1,3 +1,8 @@
+cbuffer ConstantBuffer : register(b0)
+{
+    matrix wvpMatrix;
+}
+
 struct VSInput
 {
     float3 position : POSITION;
@@ -15,7 +20,7 @@ struct VSOutput
 VSOutput main(VSInput IN)
 {
     VSOutput OUT;
-    OUT.position = float4(IN.position, 1.0);
+    OUT.position = mul(float4(IN.position, 1.0f), wvpMatrix);
     OUT.color = IN.color;
     OUT.uv = IN.uv;
     return OUT;
